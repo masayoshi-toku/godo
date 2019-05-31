@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>GODO</title>
+  </head>
+  <body>
+    <h1>ToDo一覧</h1>
+    <a href="http://127.0.0.1:8080/new">新規作成</a>
+    {{ range . }}
+      <ul>
+        <li><a href="http://127.0.0.1:8080/edit?id={{ .Id }}">ID: {{ .Id }} Content: {{ .Content }}</a></li>
+      </ul>
+    {{ end }}
+  </body>
+</html>

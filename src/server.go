@@ -1,23 +1,95 @@
 package main
 
 import (
-	"fmt"
+	"html/template"
 	"net/http"
+	"time"
+
+	"github.com/jinzhu/gorm"
+	_ "github.com/lib/pq"
 )
 
-type WelcomeHandler struct{}
+type Todo struct {
+	Id        int
+	Content   string
+	CreatedAt time.Time
+}
 
-func (h *WelcomeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprintf(w, "Welcome to GODO!")
+var Db *gorm.DB
+
+func init() {
+	var err error
+	Db, err = gorm.Open("postgres", "user=gwp dbname=gwp password=gwp sslmode=disable")
+	if err != nil {
+		panic(err)
+	}
+	Db.AutoMigrate(&Todo{})
+}
+
+func getAllToDo(w http.ResponseWriter, r *http.Request) {
+	var todos []Todo
+	Db.Order("Id asc").Find(&todos)
+
+	t, _ := template.ParseFiles("index.html")
+	t.Execute(w, todos)
+}
+
+func newToDo(w http.ResponseWriter, r *http.Request) {
+	t, _ := template.ParseFiles("form.html")
+	t.Execute(w, nil)
+}
+
+func createToDo(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	todo := Todo{Content: r.PostForm["content"][0]}
+	Db.Create(&todo)
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("location", "http://127.0.0.1:8080/")
+	w.WriteHeader(http.StatusSeeOther)
+}
+
+func editToDo(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	var todo Todo
+	Db.Find(&todo, r.Form["id"][0])
+
+	t, _ := template.ParseFiles("edit.html")
+	t.Execute(w, &todo)
+}
+
+func updateToDo(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	var todo Todo
+	Db.Find(&todo, r.Form["id"][0])
+	Db.Model(&todo).Update("Content", r.Form["content"][0])
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("location", "http://127.0.0.1:8080/")
+	w.WriteHeader(http.StatusSeeOther)
+}
+
+func deleteToDo(w http.ResponseWriter, r *http.Request) {
+	r.ParseForm()
+	var todo Todo
+	Db.Find(&todo, r.Form["id"][0])
+	Db.Delete(&todo)
+
+	w.Header().Set("Content-Type", "text/html")
+	w.Header().Set("location", "http://127.0.0.1:8080/")
+	w.WriteHeader(http.StatusSeeOther)
 }
 
 func main() {
-	welcomeHandler := WelcomeHandler{}
-
 	server := http.Server{
 		Addr: ":8080",
 	}
 
-	http.Handle("/", &welcomeHandler)
+	http.HandleFunc("/", getAllToDo)
+	http.HandleFunc("/new", newToDo)
+	http.HandleFunc("/create", createToDo)
+	http.HandleFunc("/edit", editToDo)
+	http.HandleFunc("/update", updateToDo)
+	http.HandleFunc("/delete", deleteToDo)
 	server.ListenAndServe()
 }
