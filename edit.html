@@ -11,6 +11,9 @@
       <input type="text" name="content" value="{{.Content}}"/>
       <input type="submit"/>
     </form>
-    <a href="http://127.0.0.1:8080/delete?id={{.Id}}">削除</a>
+    <form action="http://127.0.0.1:8080/delete" method="post" enctype="application/x-www-form-urlencoded">
+      <input type="hidden" name="id" value={{.Id}}>
+      <input type="submit" value="削除する">
+    </form>
   </body>
 </html>
