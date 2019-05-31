@@ -1,8 +1,10 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -80,16 +82,36 @@ func deleteToDo(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusSeeOther)
 }
 
+func handleRequest(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprint(os.Stdout, r.URL.Path)
+	fmt.Fprint(os.Stdout, r.Method)
+	switch r.Method {
+	case "GET":
+		switch r.URL.Path {
+		case "/":
+			getAllToDo(w, r)
+		case "/new":
+			newToDo(w, r)
+		case "/edit":
+			editToDo(w, r)
+		}
+	case "POST":
+		switch r.URL.Path {
+		case "/":
+			createToDo(w, r)
+		case "/update":
+			updateToDo(w, r)
+		case "/delete":
+			deleteToDo(w, r)
+		}
+	}
+}
+
 func main() {
 	server := http.Server{
 		Addr: ":8080",
 	}
 
-	http.HandleFunc("/", getAllToDo)
-	http.HandleFunc("/new", newToDo)
-	http.HandleFunc("/create", createToDo)
-	http.HandleFunc("/edit", editToDo)
-	http.HandleFunc("/update", updateToDo)
-	http.HandleFunc("/delete", deleteToDo)
+	http.HandleFunc("/", handleRequest)
 	server.ListenAndServe()
 }
