@@ -61,8 +61,8 @@ func editToDo(w http.ResponseWriter, r *http.Request) {
 func updateToDo(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	var todo Todo
-	Db.Find(&todo, r.Form["id"][0])
-	Db.Model(&todo).Update("Content", r.Form["content"][0])
+	Db.Find(&todo, r.PostForm["id"][0])
+	Db.Model(&todo).Update("Content", r.PostForm["content"][0])
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("location", "http://127.0.0.1:8080/")
@@ -72,7 +72,7 @@ func updateToDo(w http.ResponseWriter, r *http.Request) {
 func deleteToDo(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 	var todo Todo
-	Db.Find(&todo, r.Form["id"][0])
+	Db.Find(&todo, r.PostForm["id"][0])
 	Db.Delete(&todo)
 
 	w.Header().Set("Content-Type", "text/html")
