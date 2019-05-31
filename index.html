@@ -9,7 +9,7 @@
     <a href="http://127.0.0.1:8080/new">新規作成</a>
     {{ range . }}
       <ul>
-        <li><a href="http://127.0.0.1:8080/edit?id={{ .Id }}">ID: {{ .Id }} Content: {{ .Content }}</a></li>
+        <li><a href="http://127.0.0.1:8080/show?id={{ .Id }}">ID: {{ .Id }} Content: {{ .Content }}</a></li>
       </ul>
     {{ end }}
   </body>

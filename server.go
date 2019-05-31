@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bytes"
+	"encoding/base64"
 	"html/template"
+	"image/jpeg"
 	"net/http"
 	"time"
 
@@ -12,6 +15,7 @@ import (
 type Todo struct {
 	Id        int
 	Content   string
+	Image     []byte
 	CreatedAt time.Time
 }
 
@@ -40,8 +44,16 @@ func newToDo(w http.ResponseWriter, r *http.Request) {
 }
 
 func createToDo(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
-	todo := Todo{Content: r.PostForm["content"][0]}
+	r.ParseMultipartForm(5242880) // 5MB
+	file, _, _ := r.FormFile("image")
+	defer file.Close()
+
+	img, _ := jpeg.Decode(file)
+	buffer := new(bytes.Buffer)
+	jpeg.Encode(buffer, img, nil)
+	imageBytes := buffer.Bytes()
+
+	todo := Todo{Content: r.PostFormValue("content"), Image: imageBytes}
 	Db.Create(&todo)
 
 	w.Header().Set("Content-Type", "text/html")
@@ -49,20 +61,50 @@ func createToDo(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusSeeOther)
 }
 
-func editToDo(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
+func showToDo(w http.ResponseWriter, r *http.Request) {
 	var todo Todo
-	Db.Find(&todo, r.Form["id"][0])
+	Db.Find(&todo, r.FormValue("id"))
+
+	imageStr := base64.StdEncoding.EncodeToString(todo.Image)
+
+	todoData := map[string]interface{}{
+		"todo":     todo,
+		"imageStr": imageStr,
+	}
+
+	t, _ := template.ParseFiles("show.html")
+	t.Execute(w, todoData)
+}
+
+func editToDo(w http.ResponseWriter, r *http.Request) {
+	var todo Todo
+	Db.Find(&todo, r.FormValue("id"))
+
+	imageStr := base64.StdEncoding.EncodeToString(todo.Image)
+
+	todoData := map[string]interface{}{
+		"todo":     todo,
+		"imageStr": imageStr,
+	}
 
 	t, _ := template.ParseFiles("edit.html")
-	t.Execute(w, &todo)
+	t.Execute(w, todoData)
 }
 
 func updateToDo(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
 	var todo Todo
-	Db.Find(&todo, r.PostForm["id"][0])
-	Db.Model(&todo).Update("Content", r.PostForm["content"][0])
+	Db.Find(&todo, r.PostFormValue("id"))
+
+	r.ParseMultipartForm(5242880) // 5MB
+	file, _, _ := r.FormFile("image")
+	defer file.Close()
+
+	img, _ := jpeg.Decode(file)
+	buffer := new(bytes.Buffer)
+	jpeg.Encode(buffer, img, nil)
+	imageBytes := buffer.Bytes()
+
+	Db.Model(&todo).Updates(Todo{Content: r.PostFormValue("content"), Image: imageBytes})
 
 	w.Header().Set("Content-Type", "text/html")
 	w.Header().Set("location", "http://127.0.0.1:8080/")
@@ -70,9 +112,8 @@ func updateToDo(w http.ResponseWriter, r *http.Request) {
 }
 
 func deleteToDo(w http.ResponseWriter, r *http.Request) {
-	r.ParseForm()
 	var todo Todo
-	Db.Find(&todo, r.PostForm["id"][0])
+	Db.Find(&todo, r.PostFormValue("id"))
 	Db.Delete(&todo)
 
 	w.Header().Set("Content-Type", "text/html")
@@ -88,6 +129,8 @@ func handleRequest(w http.ResponseWriter, r *http.Request) {
 			getAllToDo(w, r)
 		case "/new":
 			newToDo(w, r)
+		case "/show":
+			showToDo(w, r)
 		case "/edit":
 			editToDo(w, r)
 		}
