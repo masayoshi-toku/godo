@@ -1,10 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"html/template"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/jinzhu/gorm"
@@ -83,8 +81,6 @@ func deleteToDo(w http.ResponseWriter, r *http.Request) {
 }
 
 func handleRequest(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(os.Stdout, r.URL.Path)
-	fmt.Fprint(os.Stdout, r.Method)
 	switch r.Method {
 	case "GET":
 		switch r.URL.Path {
