@@ -6,9 +6,12 @@
   </head>
   <body>
     <h1>ToDo編集</h1>
-    <form action="http://127.0.0.1:8080/update?id={{.Id}}" method="post" enctype="application/x-www-form-urlencoded">
+    <form action="http://127.0.0.1:8080/update" method="post" enctype="multipart/form-data">
       <label for="content">内容</label>
-      <input type="text" name="content" value="{{.Content}}"/>
+      <input type="text" name="content" value="{{.todo.Content}}"/>
+      <label for="image">画像</label>
+      <input type="file" name="image"/>
+      現在の画像: <img src="data:image/jpg;base64,{{ .imageStr }}" width="200">
       <input type="submit"/>
     </form>
     <form action="http://127.0.0.1:8080/delete" method="post" enctype="application/x-www-form-urlencoded">

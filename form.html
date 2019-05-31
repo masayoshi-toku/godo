@@ -6,9 +6,11 @@
   </head>
   <body>
     <h1>ToDo作成</h1>
-    <form action="http://127.0.0.1:8080/" method="post" enctype="application/x-www-form-urlencoded">
+    <form action="http://127.0.0.1:8080/" method="post" enctype="multipart/form-data">
       <label for="content">内容</label>
       <input type="text" name="content"/>
+      <label for="image">画像</label>
+      <input type="file" name="image"/>
       <input type="submit"/>
     </form>
   </body>
